@@ -267,6 +267,14 @@ module Sinatra
 
       # Returns the files as a hash.
       def files(match=nil)
+          # memoize to save time when the filesystem is slow
+          @@files_memo ||= {}
+          key = "match_#{match.to_s.inspect}"
+          memoed = @@files_memo[key]
+          if memoed
+            return memoed
+          end
+
           # All
           # A buncha tuples
           tuples = @served.map { |prefix, local_path|
@@ -278,7 +286,9 @@ module Sinatra
             }
           }.flatten.compact
 
-          Hash[*tuples]
+          result = Hash[*tuples]
+          @@files_memo[key] = result
+          result
       end
 
       # Returns an array of URI paths of those matching given globs.
