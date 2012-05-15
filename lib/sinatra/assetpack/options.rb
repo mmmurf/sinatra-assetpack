@@ -262,12 +262,34 @@ module Sinatra
         end
       end
 
+
+    def files_3(match=nil)
+
+      
+ 
+   
+            # All
+            # A buncha tuples
+            tuples = @served.map { |prefix, local_path|
+              path = File.expand_path(File.join(@app.root, local_path))
+              spec = File.join(path, '**', '*')
+
+              Dir[spec].map { |f|
+                [ to_uri(f, prefix, path), f ]  unless File.directory?(f)
+              }
+            }.flatten.compact
+
+        result = Hash[*tuples]
+          
+       end
+      
       # Returns the files as a hash.
       def files(match=nil)
           # memoize to save time when the filesystem is slow
           @@files_memo ||= {}
-          key = "match_#{match.to_s.inspect}"
+          key = "match_#{@served.inspect}_#{match.to_s.inspect}"
           memoed = @@files_memo[key]
+       
           if memoed
             return memoed
           end
@@ -286,6 +308,8 @@ module Sinatra
           result = Hash[*tuples]
           @@files_memo[key] = result
           result
+      rescue => e
+        puts "RAISED #{e}"
       end
 
       # Returns an array of URI paths of those matching given globs.
